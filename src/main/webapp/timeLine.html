@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!--    引入element ui-->
+    <link rel="stylesheet" href="js/element-ui/lib/theme-chalk/index.css">
+    <style>
+        #top-page{
+            padding-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div id="root">
+    <el-page-header @back="goBack" content="时间线" id="top-page">
+    </el-page-header>
+    <div class="block">
+        <el-timeline>
+            <el-timeline-item timestamp="2022/7/26" placement="top">
+                <el-card>
+                    <h4>前端框架搭建完成</h4>
+                    <p>本当迷 提交于 2022/7/26 23:46</p>
+                </el-card>
+            </el-timeline-item>
+            <el-timeline-item timestamp="2018/4/3" placement="top">
+                <el-card>
+                    <h4>完成后端接口</h4>
+                    <p>本当迷 计划提交于 2022/7/27 23:46</p>
+                </el-card>
+            </el-timeline-item>
+            <el-timeline-item timestamp="2018/4/2" placement="top">
+                <el-card>
+                    <h4>代码优化</h4>
+                    <p>本当迷 计划提交于 2022/7/28 23:46</p>
+                </el-card>
+            </el-timeline-item>
+        </el-timeline>
+    </div>
+</div>
+
+<!--引入vue-->
+<script src="js/Vue-js/vue.js"></script>
+<!--引入element ui-->
+<script src="js/element-ui/lib/index.js"></script>
+<script>
+    new Vue({
+        el : '#root',
+        data : {
+
+        },
+        methods: {
+            goBack() {
+                window.location.href = "index.html"
+            }
+        }
+    })
+</script>
+</body>
+</html>

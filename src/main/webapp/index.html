@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!--    引入element ui-->
+    <link rel="stylesheet" href="js/element-ui/lib/theme-chalk/index.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            text-decoration: none; /* 去除默认的下划线 */
+
+        }
+
+        .el-select .el-input {
+            width: 130px;
+        }
+
+        .input-with-select .el-input-group__prepend {
+            background-color: #fff;
+        }
+
+        #iframe-video {
+            width: 100%;
+            height: 480px;
+
+        }
+
+        #button-position {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+<div id="root">
+
+
+    <div class="line"></div>
+
+    <el-menu
+            :default-active="activeIndex2"
+            class="el-menu-demo"
+            mode="horizontal"
+            @select="handleSelect"
+            background-color="#545c64"
+            text-color="#fff"
+
+            active-text-color="#ffd04b">
+        <el-row type="flex" justify="end">
+
+            <el-menu-item index="1" @click="timeLine">时间线</el-menu-item>
+            <el-submenu index="2">
+                <template slot="title">我的工作台</template>
+                <el-menu-item index="2-1" :disabled="state=== 0">查看所有源</el-menu-item>
+                <el-menu-item index="2-2" :disabled="state=== 0">添加播放源</el-menu-item>
+                <el-menu-item index="2-3" :disabled="state=== 0">删除播放源</el-menu-item>
+                <el-menu-item index="2-4"><a style="color: #FFFFFF" href="https://www.bdmcom.cn">联系作者</a></el-menu-item>
+            </el-submenu>
+            <el-menu-item index="3" :disabled="state=== 0">消息中心</el-menu-item>
+            <el-menu-item index="4" @click="dialogFormVisible = true">个人中心
+                <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
+            </el-menu-item>
+        </el-row>
+    </el-menu>
+
+    <el-dialog title="登录/注册" :visible.sync="dialogFormVisible">
+        <el-tabs v-model="activeName" type="card" @tab-click="handleClick">
+            <el-tab-pane label="登录" name="first">
+                <el-form :label-position="labelPosition" label-width="80px" :model="userData">
+                    <el-form-item label="用户名">
+                        <el-input placeholder="请输入用户名" v-model="userData.name"></el-input>
+                    </el-form-item>
+                    <el-form-item label="密码">
+                        <el-input placeholder="请输入密码" v-model="userData.password" show-password></el-input>
+                    </el-form-item>
+                </el-form>
+            </el-tab-pane>
+            <el-tab-pane label="注册" name="second">
+                <el-form :label-position="labelPosition" label-width="80px" :model="userData">
+                    <el-form-item label="用户名">
+                        <el-input placeholder="请输入用户名" v-model="userData.name"></el-input>
+                    </el-form-item>
+                    <el-form-item label="密码">
+                        <el-input placeholder="请输入密码" v-model="userData.password" show-password></el-input>
+                    </el-form-item>
+                    <el-form-item label="密码">
+                        <el-input placeholder="请输再次入密码" v-model="userData.password" show-password></el-input>
+                    </el-form-item>
+                </el-form>
+            </el-tab-pane>
+        </el-tabs>
+
+
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFormVisible = false">取 消</el-button>
+            <el-button type="primary" :disabled="state=== 1" @click="login(); dialogFormVisible = false">确 定</el-button>
+        </div>
+    </el-dialog>
+
+
+    <div style="margin-top: 15px;">
+        <el-input placeholder="请输入视频播放链接：" v-model="inputUrl" class="input-with-select">
+            <el-select v-model="value" slot="prepend" placeholder="请选择播放源" value="">
+                <template>
+                    <el-option
+                            v-for="item in videoList"
+                            :key="item.analysisUrl"
+                            :label="item.name"
+                            :value="item.analysisUrl">
+                    </el-option>
+                </template>
+            </el-select>
+            <el-button slot="append" icon="el-icon-search" @click="player"></el-button>
+        </el-input>
+    </div>
+
+    <template>
+        <el-alert
+                title="温馨提示！"
+                type="warning"
+                description="退出不了全屏，请按Esc或者F11"
+                show-icon>
+        </el-alert>
+        <el-alert
+                title="免责声明"
+                type="error"
+                description="此程序用于学习，勿用于商业盈利！如存在侵权，请联系作者！"
+                show-icon>
+        </el-alert>
+    </template>
+
+
+    <div>
+        <el-button type="success" plain @click="screen" circle id="button-position">全屏</el-button>
+        <iframe
+                id="iframe-video"
+                name="iframeContain"
+                noresize="noresize" marginwidth="0" marginheight="0" scrolling="auto" frameborder="0"
+                v-bind:src="playUrl">
+        </iframe>
+
+    </div>
+
+
+</div>
+
+<!--引入vue-->
+<script src="js/Vue-js/vue.js"></script>
+<!--引入element ui-->
+<script src="js/element-ui/lib/index.js"></script>
+<!--引入axios-->
+<script src="js/axios/axios-0.18.0.js"></script>
+<script>
+
+
+    console.log()
+    new Vue({
+
+        el: '#root',
+        data: {
+            // 登录状态 在线：1  离线 0
+            state: 0,
+            // 登录
+            labelPosition: 'left',
+            // 用户数据 userData
+            userData: {
+                name: '',
+                password: '',
+                type: 'login',
+                id: '',
+                admin: ''
+            },
+
+            activeName: 'first',
+            // 登录注册
+            dialogTableVisible: false,
+            dialogFormVisible: false,
+            /*form: {
+                name: '',
+                region: '',
+                date1: '',
+                date2: '',
+                delivery: false,
+                type: [],
+                resource: '',
+                desc: ''
+            },*/
+            formLabelWidth: '120px',
+            // 登录注册截至
+
+            activeIndex2: '1',
+            input1: '',
+            input2: '',
+            input3: '',
+            select: '',
+            videoList: [{name: '虾米解析', analysisUrl: 'https://jx.xmflv.com/?url='},
+                {name: 'Iuk解析', analysisUrl: 'https://player.iuk.ink/m3u8.php?url='}
+            ],
+            videoTmp: {
+                name: '',
+                analysisUrl: ''
+            },
+            inputUrl: '',
+            value: '',
+            playUrl: '',
+        },
+        methods: {
+            // 点击登录按钮
+            login() {
+                console.log(this.userData.name, this.userData.password),
+                    axios({
+                        method: 'post',
+                        url: 'http://localhost/user/login',
+                        data: this.userData
+                    }).then((res) => {
+                        console.log('后端返回的数据' + res.data)
+                        console.log(res.data)
+                        if (res.data.success == "1") {
+                            console.log("登录成功！")
+                            this.userData.password = ''
+
+                            this.$message({
+                                message: '恭喜你，登录成功',
+                                type: 'success'
+                            });
+
+                            this.state = 1
+                            this.userData.admin = res.data.success
+                            this.userData.name = res.data.name
+                            this.userData.admin = res.data.admin
+                            this.userData.id = res.data.id
+
+
+                        } else if (res.data.success == "0") {
+                            console.log("注册成功")
+
+                            this.$message({
+                                message: '恭喜你，注册成功',
+                                type: 'success'
+                            });
+
+                            this.state = 1
+                            this.userData.admin = res.data.success
+                            this.userData.name = res.data.name
+                            this.userData.admin = res.data.admin
+                            this.userData.id = res.data.id
+                        } else if(res.data.success == "-2"){
+                            console.log("用户名已经存在！请更改用户名！")
+
+                            this.$message('用户名已经存在！请更改用户名！');
+                        } else {
+                            console.log("密码错误")
+
+                            this.$message.error('密码错误！请确认密码是否正确！');
+
+                        }
+                    })
+            },
+            // table标签页
+            handleClick(tab, event) {
+                if (tab.index === "0") {
+                    console.log("登录")
+                    this.userData.type = "login"
+                } else {
+                    console.log("注册")
+                    this.userData.type = "register"
+                }
+            },
+
+            handleSelect(key, keyPath) {
+                console.log(key, keyPath);
+            }, // 全屏操作
+            screen() {
+                if (this.playUrl === '') {
+                    this.$message({
+                        message: '请填写要播放的视频信息，并点击搜索！',
+                        type: 'warning'
+                    });
+                    return
+                }
+                this.player()
+                //设置后就是id==iframe-video 的容器全屏
+                let arr = document.getElementById('iframe-video')
+                if (this.fullscreen) {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen()
+                    } else if (document.webkitCancelFullScreen) {
+                        document.webkitCancelFullScreen()
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen()
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen()
+                    }
+                } else {
+                    if (arr.requestFullscreen) {
+                        arr.requestFullscreen()
+                    } else if (arr.webkitRequestFullScreen) {
+                        arr.webkitRequestFullScreen()
+                    } else if (arr.mozRequestFullScreen) {
+                        arr.mozRequestFullScreen()
+                    } else if (arr.msRequestFullscreen) {
+                        // IE11
+                        arr.msRequestFullscreen()
+                    }
+                }
+            }, timeLine() {
+                window.location.href = "timeLine.html"
+            } // 查询所有数据
+            , selectAll() {
+                console.log("页面加载完成")
+                // 保持登录状态
+                axios({
+                    method: 'get',
+                    url : 'http://localhost/user/status'
+                }).then((res) =>{
+                    console.log(res.data)
+                    if(res.data == "noSuccess"){
+                        this.state = 0
+                    }else{
+                        this.state = 1
+                        this.userData.admin = res.data.success
+                        this.userData.name = res.data.name
+                        this.userData.admin = res.data.admin
+                        this.userData.id = res.data.id
+
+                    }
+                })
+
+            }, //播放视频
+            player() {
+                this.playUrl = this.value + this.inputUrl
+                console.log(this.playUrl)
+            }
+        }, // 页面加载完成后执行
+        mounted() {
+            this.selectAll()
+            this.$notify({
+                title: '成功',
+                message: '页面加载完成！',
+                type: 'success',
+            })
+
+        },
+    })
+</script>
+</body>
+</html>
