@@ -1,8 +1,6 @@
 package com.web;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.mapper.UserMapper;
 import com.pojo.Login;
 import com.pojo.User;
 import com.service.UserService;
@@ -11,13 +9,11 @@ import org.junit.jupiter.api.Test;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.URLEncoder;
 
 /**
  * @code Description
@@ -40,10 +36,8 @@ public class UserServlet extends BaseServlet {
 
         final String readLine = reader.readLine();
 
-        System.out.println(readLine);
         // 数据转JSON
         final User user = JSON.parseObject(readLine, User.class);
-        System.out.println(user);
 
         final User selectUser = userService.selectUser(user);
 
@@ -55,6 +49,7 @@ public class UserServlet extends BaseServlet {
             if ("register".equals(user.getType()) && name == null) {
                 System.out.println("注册");
                 user.setAdmin("0");
+                user.setId(0);
 
                 // 注册操作
                 userService.addUser(user);
@@ -145,14 +140,70 @@ public class UserServlet extends BaseServlet {
         }
     }
 
+    public void selectAll(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // 1.获取全部用户
+        final User[] users = userService.selectAll();
 
+        // 2.对象转为JSON
+        final String jsonString = JSON.toJSONString(users);
 
+        // 3.响应数据
+        response.setContentType("text/json;charset=utf-8");
+        response.getWriter().write(jsonString);
 
-    @Test
-    public void selectUser() {
-        final UserServiceImpl userService1 = new UserServiceImpl();
-        final User user = userService1.selectUserName(new User("本当迷", "Abc1"));
-        System.out.println(user);
     }
+
+    public void deleteById(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // 1.获取get请求中的用户id
+        final String id = request.getParameter("id");
+
+        userService.deleteUserById(Integer.parseInt(id));
+
+        // 2.响应成功信息
+        response.getWriter().write("success");
+
+        // 3.内部转发
+//        request.getRequestDispatcher("http://localhost/User.html").forward(request, response);
+//        // 重定向 优先使用，减少服务器压力
+//        response.sendRedirect("http://localhost/User.html");
+    }
+
+    public void updateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // 1.获取post请求中的JSON对象
+        final BufferedReader reader = request.getReader();
+
+        final String user = reader.readLine();
+
+        // 2.JSON转为User对象
+        final User user1 = JSON.parseObject(user, User.class);
+
+        // 3.修改密码
+        userService.updateUser(user1);
+
+        // 3.响应数据
+        response.getWriter().write("success");
+
+    }
+
+    /**
+     * 退出登录
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    public void signOut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        final HttpSession session = request.getSession();
+        session.removeAttribute("user");
+        session.invalidate();
+//        response.sendRedirect("http://localhost/index.html");htm
+
+        response.setContentType("text/json;charset=utf-8");
+        response.getWriter().write("success");
+    }
+
+
+
+
 
 }

@@ -64,4 +64,74 @@ public class UserServiceImpl implements UserService {
 
         return selectUser;
     }
+
+    @Override
+    public User[] selectAll() {
+        // 2. 获取SqlSession对象
+        final SqlSession sqlSession = factory.openSession();
+
+        // 3.获取UserMapper对象
+        final UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+
+        final User[] users = mapper.selectAll();
+
+        // 关闭资源
+        sqlSession.close();
+
+        return users;
+
+
+    }
+
+    @Override
+    public void deleteUserById(int id) {
+        // 2.获取SqlSession对象
+        final SqlSession sqlSession = factory.openSession();
+
+        // 3.获取UserMapper对象
+        final UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+
+        mapper.deleteUserById(id);
+
+        // 数据持久化
+        sqlSession.commit();
+
+        // 关闭资源
+        sqlSession.close();
+
+    }
+
+    @Override
+    public void deleteUserByIds(int[] ids) {
+        // 2.获取SqlSession对象
+        final SqlSession sqlSession = factory.openSession();
+
+        // 3.获取UserMapper对象
+        final UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+
+        mapper.deleteUserByIds(ids);
+
+        // 4.数据持久化
+        sqlSession.commit();
+
+        // 5.关闭资源
+        sqlSession.close();
+    }
+
+    @Override
+    public void updateUser(User user) {
+        // 2.获取SqlSession对象
+        final SqlSession sqlSession = factory.openSession();
+
+        // 3.获取UserMapper对象
+        final UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+
+        mapper.updateUser(user);
+
+        // 4.数据持久化
+        sqlSession.commit();
+
+        // 5.关闭资源
+        sqlSession.close();
+    }
 }

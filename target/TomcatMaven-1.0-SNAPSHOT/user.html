@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户管理</title>
+    <!--    引入element ui-->
+    <link rel="stylesheet" href="js/element-ui/lib/theme-chalk/index.css">
+    <style>
+        #top-page{
+            padding-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="root">
+    <el-page-header @back="goBack" content="用户管理" id="top-page">
+    </el-page-header>
+    <template>
+        <el-table
+                :data="tableData.filter(data => !search || data.name.toLowerCase().includes(search.toLowerCase()))"
+                style="width: 100%">
+            <el-table-column
+                    label="用户名"
+                    prop="name">
+            </el-table-column>
+            <el-table-column
+                    label="密码"
+                    prop="password">
+            </el-table-column>
+            <el-table-column
+                    align="right">
+                <template slot="header" slot-scope="scope">
+                    <el-input
+                            v-model="search"
+                            size="mini"
+                            placeholder="输入关键字回车搜索"></el-input>
+                </template>
+                <template slot-scope="scope">
+                    <el-button
+                            size="mini"
+                            @click="handleEdit(scope.$index, scope.row)">Edit
+                    </el-button>
+                    <el-button
+                            size="mini"
+                            type="danger"
+                            @click="handleDelete(scope.$index, scope.row)">Delete
+                    </el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+    </template>
+</div>
+
+
+<!--引入vue-->
+<script src="js/Vue-js/vue.js"></script>
+<!--引入element ui-->
+<script src="js/element-ui/lib/index.js"></script>
+<!--引入axios-->
+<script src="js/axios/axios-0.18.0.js"></script>
+<script>
+    new Vue({
+        el: '#root',
+        data: {
+            tableData: [{
+                name: '王小虎',
+                password: '上海市普陀区金沙江路 1518 弄',
+                id: ''
+            }, {
+                name: '王小虎',
+                password: '上海市普陀区金沙江路 1517 弄',
+                id: ''
+            }, {
+                name: '小虎',
+                password: '上海市普陀区金沙江路 1519 弄',
+                id: ''
+            }, {
+                name: '王小虎',
+                password: '上海市普陀区金沙江路 1516 弄',
+                id: ''
+            }],
+            search: ''
+        },
+        methods: {
+            goBack() {
+                window.location.href = "index.html"
+            },
+            handleEdit(index, row) {
+                console.log(index, row);
+                {
+                    this.$prompt('请输入密码', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        inputPattern: /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,20}$/,
+                        inputErrorMessage: '密码至少包含 数字和英文，长度6-20'
+                    }).then(({value}) => {
+                        this.tableData[index].password = value
+                        axios({
+                            method : 'post',
+                            url : 'http://localhost/user/updateUser',
+                            data : this.tableData[index]
+                        }).then((res) => {
+                            if(res.data == "success"){
+
+                                this.$message({
+                                    type: 'success',
+                                    message: '密码更改为: ' + value
+                                });
+                            }else{
+                                this.$message.error('密码修改失败!原因不明');
+                            }
+                        })
+
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '取消修改'
+                        });
+                    });
+                }
+            },
+            handleDelete(index, row) {
+                console.log(index, row);
+                this.$confirm('此操作将永久删除, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    console.log(index)
+                    axios({
+                        method: 'get',
+                        url: 'http://localhost/user/deleteById?id=' + this.tableData[index].id
+                    }).then((res) =>{
+                        console.log(res.data)
+                        if(res.data == "success"){
+                            this.selectAll()
+                            this.$message({
+                                type: 'success',
+                                message: '删除成功!',
+                            });
+                        }else{
+                            this.$message.error('删除失败!原因不明！');
+                        }
+                    })
+
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            // 获取全部用户
+            selectAll(){
+                axios({
+                    method: 'get',
+                    url: 'http://localhost/user/selectAll'
+                }).then((res) => {
+                    console.log(res.data)
+                    this.tableData = res.data
+                })
+            }
+        },
+        mounted() {
+            console.log("页面加载成功！")
+            this.selectAll()
+        },
+
+    })
+</script>
+</body>
+</html>

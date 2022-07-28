@@ -1,7 +1,9 @@
 package com.service;
 
 import com.pojo.User;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * @code Description
@@ -28,4 +30,30 @@ public interface UserService {
      * @return
      */
     User selectUserName(User user);
+
+    /**
+     * 查看所有用户
+     * @return 返回用户数组
+     */
+    User[] selectAll();
+
+    /**
+     * 根据用户id删除指定用户
+     * @param id 用户id
+     */
+    void deleteUserById(int id);
+
+    /**
+     * 根据用户id数组批量删除用户
+     * @param ids 用户数组
+     */
+
+    void deleteUserByIds(int[] ids);
+
+    /**
+     * 修改用户密码
+     * @param user 用户
+     */
+    void updateUser( User user);
+
 }
